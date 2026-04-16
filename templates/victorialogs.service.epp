@@ -1,0 +1,19 @@
+<%-|
+  String[1] $service_name,
+  String[1] $user,
+  String[1] $group,
+  Stdlib::Absolutepath $binary_path,
+  Array[String] $args,
+|-%>
+[Unit]
+Description=VictoriaLogs ${title}
+
+[Service]
+Type=simple
+User=<%= $user %>
+Group=<%= $group %>
+ExecStart=<%= $binary_path %> \
+  <%= $arg.join("\\\n  ") %>
+
+[Install]
+WantedBy=multi-user.target
