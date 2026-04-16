@@ -1,0 +1,26 @@
+<%-|
+  String[1] $instance_name,
+  String[1] $service_name,
+  String[1] $user,
+  String[1] $group,
+  Stdlib::Absolutepath $binary_path,
+  Array[Victorialogs::Options] $args,
+|-%>
+[Unit]
+Description=VictoriaLogs <%= $instance_name %>
+
+[Service]
+Type=simple
+User=<%= $user %>
+Group=<%= $group %>
+<%-
+$cmd = [ $binary_path ] + $args.reduce([]) |$memo, $x| {
+  $memo + $x.map |$k,$v| {
+    "${k}=${stdlib::shell_escape($v)}"
+  }
+}
+-%>
+ExecStart=<%= $cmd.join(" \\\n  ") %>
+
+[Install]
+WantedBy=multi-user.target
