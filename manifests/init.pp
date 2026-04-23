@@ -8,11 +8,11 @@
 #   }
 #
 # @param ensure
-#   Whether to install or remove VictoriaLogs. Valid values are 'present' and 'absent'.
+#   Whether to install or remove VictoriaLogs.
 # @param edition
-#   VictoriaLogs edition to install. Valid values are 'oss' and 'enterprise'.
+#   VictoriaLogs edition to install.
 # @param install_method
-#   How to install VictoriaLogs. Valid values are 'archive', 'package', and 'none'.
+#   How to install VictoriaLogs.
 # @param manage_user
 #   Whether to manage the VictoriaLogs user.
 # @param user
@@ -34,17 +34,22 @@
 # @param group
 #   The name of the VictoriaLogs group.
 # @param version
-#   The version of VictoriaLogs to install. Required when install_method is 'archive' or 'package'.
+#   The version of VictoriaLogs to install. Required when install_method is
+#   'archive' or 'package'.
 # @param package_name
 #   The name of the package to install when using the 'package' install method.
 # @param download_url
-#   The URL to download VictoriaLogs from. Defaults to GitHub releases based on version and edition.
+#   The URL to download VictoriaLogs from. Defaults to GitHub releases based on
+#   version and edition.
 # @param checksum_url
-#   The URL to download the checksum file from. Defaults to GitHub releases based on version and edition.
+#   The URL to download the checksum file from. Defaults to GitHub releases
+#   based on version and edition.
 # @param binary_path
-#   Specify where to look for the VictoriaLogs binary. Required when install_method is 'none'. Auto-guessed otherwise.
+#   Specify where to look for the VictoriaLogs binary. Required when
+#   install_method is 'none'. Auto-guessed otherwise.
 # @param instances
-#   A hash of VictoriaLogs instances to manage. Keys are instance names, values are hashes of instance options.
+#   A hash of VictoriaLogs instances to manage. Keys are instance names, values
+#   are hashes of instance options.
 class victorialogs (
   Enum['absent', 'present'] $ensure = 'present',
   Enum['oss', 'enterprise'] $edition = 'oss',
@@ -61,8 +66,8 @@ class victorialogs (
   String[1] $homedir_group = $group,
   Optional[String[1]] $version = undef,
   String[1] $package_name = 'victorialogs',
-  Stdlib::HTTPUrl $download_url = victorialogs::github_download_url($version, $edition, 'archive'),
-  Stdlib::HTTPUrl $checksum_url = victorialogs::github_download_url($version, $edition, 'checksum'),
+  Optional[Stdlib::HTTPUrl] $download_url = victorialogs::github_download_url($version, $edition, 'archive'),
+  Optional[Stdlib::HTTPUrl] $checksum_url = victorialogs::github_download_url($version, $edition, 'checksum'),
   Optional[Stdlib::Absolutepath] $binary_path = undef,
   Hash[String[1], Victorialogs::InstanceType] $instances = {
     single => {
