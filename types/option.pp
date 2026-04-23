@@ -15,7 +15,6 @@ type Victorialogs::Option = Enum[
   'enableTCP6',
   'envflag.enable',
   'envflag.prefix',
-  'eula',
   'filestream.disableFadvise',
   'flagsAuthKey',
   'forceFlushAuthKey',
@@ -175,5 +174,4 @@ type Victorialogs::Option = Enum[
   'tlsCipherSuites',
   'tlsKeyFile',
   'tlsMinVersion',
-  'version',
 ]
