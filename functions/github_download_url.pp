@@ -1,10 +1,14 @@
 # @summary Make a Github release artifact URL for specified version & edition
-# @param version VictoriaLogs version
-# @param edition VictoriaLogs edition (OSS/enterprise)
-# @param download_type Whether to make archive or checksum download URL
-# @return [String] Github release download URL
+# @param version
+#   VictoriaLogs version
+# @param edition
+#   VictoriaLogs edition (OSS/enterprise)
+# @param download_type
+#   Whether to make archive or checksum download URL
+# @return [String]
+#   Github release download URL
 function victorialogs::github_download_url(
-  Optional[String[1]] $version,
+  String[1] $version,
   Enum['oss', 'enterprise'] $edition,
   Enum['archive', 'checksum'] $download_type,
 ) >> String[1] {

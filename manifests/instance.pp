@@ -34,11 +34,11 @@
 #   }
 #
 # @param ensure
-#   Whether to create or remove the VictoriaLogs instance. Valid values are 'present' and 'absent'.
+#   Whether to create or remove the VictoriaLogs instance.
 # @param service_active
 #   Whether the VictoriaLogs service should be running.
 # @param service_enable
-#   Whether the VictoriaLogs service should be enabled at boot. Valid values are true, false, or 'mask'.
+#   Whether the VictoriaLogs service should be enabled at boot.
 # @param service_name
 #   The name of the systemd service unit.
 # @param user
@@ -48,7 +48,8 @@
 # @param binary_path
 #   The path to the VictoriaLogs binary.
 # @param options
-#   A hash of VictoriaLogs CLI options. Keys are option names, values are option values.
+#   A hash of VictoriaLogs CLI options. Keys are option names, values are
+#   option values.
 define victorialogs::instance (
   Enum['absent', 'present'] $ensure = getvar('victorialogs::ensure').lest || { 'present' },
   Boolean $service_active = true,

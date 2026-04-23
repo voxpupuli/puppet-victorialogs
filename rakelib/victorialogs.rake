@@ -78,7 +78,7 @@ namespace :victorialogs do
       # @summary VictoriaLogs CLI option type
       #
       # @note
-      #   This file is generated with `rake victorialogs:generate_cli_options`
+      #   This type is generated with `rake victorialogs:generate_cli_options`
       #
       type Victorialogs::Option = Enum[
       #{enum_values},
