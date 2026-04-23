@@ -43,17 +43,17 @@ describe 'victorialogs class' do
               ensure => 'absent',
               options => {
                 common => {
-                  '-storageDataPath' => '/var/lib/victorialogs/victoria-logs-data',
+                  'storageDataPath' => '/var/lib/victorialogs/victoria-logs-data',
                 },
               },
             },
             test => {
               options => {
                 common => {
-                  '-storageDataPath' => '/var/lib/victorialogs/data00',
+                  'storageDataPath' => '/var/lib/victorialogs/data00',
                 },
                 'syslog-input-1' => {
-                  '-syslog.listenAddr.tcp' => ':12345',
+                  'syslog.listenAddr.tcp' => ':12345',
                 },
               },
             },
@@ -94,17 +94,17 @@ describe 'victorialogs class' do
             single => {
               options => {
                 common => {
-                  '-storageDataPath' => '/var/lib/victorialogs/victoria-logs-data',
+                  'storageDataPath' => '/var/lib/victorialogs/victoria-logs-data',
                 },
               },
             },
             test => {
               options => {
                 common => {
-                  '-storageDataPath' => '/srv/victorialogs00',
+                  'storageDataPath' => '/srv/victorialogs00',
                 },
                 'syslog-input-1' => {
-                  '-syslog.listenAddr.tcp' => ':12345',
+                  'syslog.listenAddr.tcp' => ':12345',
                 },
               },
             },

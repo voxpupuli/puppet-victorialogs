@@ -66,7 +66,7 @@ namespace :victorialogs do
 
     cli_options = []
     help_output.each_line do |line|
-      match = line.match(%r{^\s+(-[a-zA-Z][a-zA-Z0-9_.-]+)})
+      match = line.match(%r{^\s+-([a-zA-Z][a-zA-Z0-9_.-]+)})
       cli_options << match[1] if match
     end
     cli_options.uniq.sort

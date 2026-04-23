@@ -12,23 +12,23 @@
 #   victorialogs::instance { 'single':
 #     options => {
 #       'common' => {
-#         '-storageDataPath' => '/var/lib/victorialogs/data00',
+#         'storageDataPath' => '/var/lib/victorialogs/data00',
 #       },
 #       'syslog-input-1' => {
-#         '-syslog.listenAddr.tcp' => 'localhost:514',
-#         '-syslog.tenantID.tcp' => '123:0',
-#         '-syslog.compressMethod.tcp' => 'gzip',
-#         '-syslog.tls' => false,
-#         '-syslog.tlsKeyFile' => '',
-#         '-syslog.tlsCertFile' => '',
+#         'syslog.listenAddr.tcp' => 'localhost:514',
+#         'syslog.tenantID.tcp' => '123:0',
+#         'syslog.compressMethod.tcp' => 'gzip',
+#         'syslog.tls' => false,
+#         'syslog.tlsKeyFile' => '',
+#         'syslog.tlsCertFile' => '',
 #       },
 #       'syslog-input-2' => {
-#         '-syslog.listenAddr.tcp' => ':6514',
-#         '-syslog.tenantID.tcp' => '567:0',
-#         '-syslog.compressMethod.tcp' => 'none',
-#         '-syslog.tls' => true,
-#         '-syslog.tlsKeyFile' => '/path/to/tls/key',
-#         '-syslog.tlsCertFile' => '/path/to/tls/cert',
+#         'syslog.listenAddr.tcp' => ':6514',
+#         'syslog.tenantID.tcp' => '567:0',
+#         'syslog.compressMethod.tcp' => 'none',
+#         'syslog.tls' => true,
+#         'syslog.tlsKeyFile' => '/path/to/tls/key',
+#         'syslog.tlsCertFile' => '/path/to/tls/cert',
 #       },
 #     },
 #   }

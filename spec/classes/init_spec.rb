@@ -115,7 +115,7 @@ describe 'victorialogs' do
             .with_user('victorialogs')
             .with_group('victorialogs')
             .with_binary_path('/usr/local/bin/victoria-logs-prod')
-            .with_options({ 'common' => { '-storageDataPath' => '/var/lib/victorialogs/victoria-logs-data' } })
+            .with_options({ 'common' => { 'storageDataPath' => '/var/lib/victorialogs/victoria-logs-data' } })
             .that_subscribes_to('Class[Victorialogs::Install]')
             .that_requires('File[/var/lib/victorialogs]')
             .that_requires('User[victorialogs]')
@@ -218,14 +218,14 @@ describe 'victorialogs' do
                 foo: {
                   options: {
                     common: {
-                      '-storageDataPath' => '/var/lib/victorialogs/foo',
+                      'storageDataPath' => '/var/lib/victorialogs/foo',
                     },
                   },
                 },
                 bar: {
                   options: {
                     common: {
-                      '-storageDataPath' => '/var/lib/victorialogs/bar',
+                      'storageDataPath' => '/var/lib/victorialogs/bar',
                     },
                   },
                 },
@@ -238,7 +238,7 @@ describe 'victorialogs' do
               is_expected.to contain_victorialogs__instance(inst)
                 .with_ensure('present')
                 .with_service_name("victorialogs-#{inst}")
-                .with_options('common' => { '-storageDataPath' => "/var/lib/victorialogs/#{inst}" })
+                .with_options('common' => { 'storageDataPath' => "/var/lib/victorialogs/#{inst}" })
             end
           end
 
@@ -250,7 +250,7 @@ describe 'victorialogs' do
                 is_expected.to contain_victorialogs__instance(inst)
                   .with_ensure('absent')
                   .with_service_name("victorialogs-#{inst}")
-                  .with_options('common' => { '-storageDataPath' => "/var/lib/victorialogs/#{inst}" })
+                  .with_options('common' => { 'storageDataPath' => "/var/lib/victorialogs/#{inst}" })
               end
             end
           end

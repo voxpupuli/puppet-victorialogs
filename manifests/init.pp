@@ -73,7 +73,7 @@ class victorialogs (
     single => {
       options => {
         common => {
-          '-storageDataPath' => '/var/lib/victorialogs/victoria-logs-data',
+          'storageDataPath' => '/var/lib/victorialogs/victoria-logs-data',
         },
       },
     },
