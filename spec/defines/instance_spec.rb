@@ -66,15 +66,15 @@ describe 'victorialogs::instance' do
             super().merge(
               options: {
                 common: {
-                  '-storageDataPath' => '/var/lib/victorialogs/data00',
+                  'storageDataPath' => '/var/lib/victorialogs/data00',
                 },
                 'syslog-input-1': {
-                  '-syslog.listenAddr.tcp' => ':1234',
-                  '-syslog.tenantID.tcp' => '123:0',
+                  'syslog.listenAddr.tcp' => ':1234',
+                  'syslog.tenantID.tcp' => '123:0',
                 },
                 'syslog-input-2': {
-                  '-syslog.listenAddr.tcp' => ':2345',
-                  '-syslog.tenantID.tcp' => '234:0',
+                  'syslog.listenAddr.tcp' => ':2345',
+                  'syslog.tenantID.tcp' => '234:0',
                 },
               },
             )

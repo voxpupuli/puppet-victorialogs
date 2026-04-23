@@ -5,6 +5,11 @@ require 'json'
 require 'net/http'
 require 'tmpdir'
 
+IGNORED_OPTIONS = %w[
+  version
+  eula
+].freeze
+
 def fetch_latest_version
   uri = URI('https://api.github.com/repos/VictoriaMetrics/VictoriaLogs/releases/latest')
   response = Net::HTTP.get(uri)
@@ -66,8 +71,8 @@ namespace :victorialogs do
 
     cli_options = []
     help_output.each_line do |line|
-      match = line.match(%r{^\s+(-[a-zA-Z][a-zA-Z0-9_.-]+)})
-      cli_options << match[1] if match
+      match = line.match(%r{^\s+-([a-zA-Z][a-zA-Z0-9_.-]+)})
+      cli_options << match[1] if match && !IGNORED_OPTIONS.include?(match[1])
     end
     cli_options.uniq.sort
 

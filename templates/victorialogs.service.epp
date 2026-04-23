@@ -16,7 +16,7 @@ Group=<%= $group %>
 <%-
 $cmd = [ $binary_path ] + $args.reduce([]) |$memo, $x| {
   $memo + $x.map |$k,$v| {
-    "${k}=${stdlib::shell_escape($v)}"
+    "-${k}=${stdlib::shell_escape($v)}"
   }
 }
 -%>
