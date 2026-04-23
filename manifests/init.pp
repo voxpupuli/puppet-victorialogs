@@ -66,8 +66,8 @@ class victorialogs (
   String[1] $homedir_group = $group,
   Optional[String[1]] $version = undef,
   String[1] $package_name = 'victorialogs',
-  Stdlib::HTTPUrl $download_url = victorialogs::github_download_url($version, $edition, 'archive'),
-  Stdlib::HTTPUrl $checksum_url = victorialogs::github_download_url($version, $edition, 'checksum'),
+  Optional[Stdlib::HTTPUrl] $download_url = victorialogs::github_download_url($version, $edition, 'archive'),
+  Optional[Stdlib::HTTPUrl] $checksum_url = victorialogs::github_download_url($version, $edition, 'checksum'),
   Optional[Stdlib::Absolutepath] $binary_path = undef,
   Hash[String[1], Victorialogs::InstanceType] $instances = {
     single => {
