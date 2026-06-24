@@ -28,6 +28,7 @@ type Victorialogs::Option = Enum[
   'http.disableKeepAlive',
   'http.disableResponseCompression',
   'http.header.csp',
+  'http.header.disableServerHostname',
   'http.header.frameOptions',
   'http.header.hsts',
   'http.idleConnTimeout',
@@ -174,4 +175,5 @@ type Victorialogs::Option = Enum[
   'tlsCipherSuites',
   'tlsKeyFile',
   'tlsMinVersion',
+  'vmalert.proxyURL',
 ]
