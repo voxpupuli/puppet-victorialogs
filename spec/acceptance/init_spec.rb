@@ -3,6 +3,7 @@
 require 'spec_helper_acceptance'
 
 TEST_VERSION = '1.49.0'
+TEST_VERSION_FOR_RE = TEST_VERSION.gsub('.', '[.]')
 
 describe 'victorialogs class' do
   describe 'with version specified' do
@@ -17,7 +18,7 @@ describe 'victorialogs class' do
     end
 
     describe 'serverspec tests' do
-      it { expect(command('/usr/local/bin/victoria-logs-prod -version').stdout).to match(%r{^victoria-logs-.*-v#{TEST_VERSION.gsub('.', '\.')}-.*$}) }
+      it { expect(command('/usr/local/bin/victoria-logs-prod -version').stdout).to match(%r{^victoria-logs-.*-v#{TEST_VERSION_FOR_RE}-.*$}) }
       it { expect(user('victorialogs')).to exist }
       it { expect(group('victorialogs')).to exist }
       it { expect(file('/var/lib/victorialogs/victoria-logs-data')).to be_directory }
@@ -28,7 +29,7 @@ describe 'victorialogs class' do
         expect(service).to be_running
       end
 
-      it { expect(curl_command('http://localhost:9428/').stdout).to match(%r{Version victoria-logs-.*-v#{TEST_VERSION.gsub('.', '\.')}}) }
+      it { expect(curl_command('http://localhost:9428/').stdout).to match(%r{Version victoria-logs-.*-v#{TEST_VERSION_FOR_RE}}) }
     end
   end
 
@@ -64,7 +65,7 @@ describe 'victorialogs class' do
     end
 
     describe 'serverspec tests' do
-      it { expect(command('/usr/local/bin/victoria-logs-prod -version').stdout).to match(%r{^victoria-logs-.*-v#{TEST_VERSION.gsub('.', '\.')}-.*$}) }
+      it { expect(command('/usr/local/bin/victoria-logs-prod -version').stdout).to match(%r{^victoria-logs-.*-v#{TEST_VERSION_FOR_RE}-.*$}) }
       it { expect(file('/var/lib/victorialogs/data00')).to be_directory }
       it { expect(port(9428)).to be_listening }
       it { expect(port(12_345)).to be_listening }
@@ -152,7 +153,7 @@ describe 'victorialogs class' do
     end
 
     describe 'serverspec tests' do
-      it { expect(command('/usr/local/bin/victoria-logs-prod -version').stdout).to match(%r{^victoria-logs-.*-v#{TEST_VERSION.gsub('.', '\.')}-enterprise-.*$}) }
+      it { expect(command('/usr/local/bin/victoria-logs-prod -version').stdout).to match(%r{^victoria-logs-.*-v#{TEST_VERSION_FOR_RE}-enterprise-.*$}) }
     end
   end
 end
