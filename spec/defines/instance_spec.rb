@@ -101,20 +101,43 @@ describe 'victorialogs::instance' do
         end
       end
 
-      context 'with victorialogs class and install_method=package' do
-        let(:pre_condition) { 'class { "victorialogs": install_method => "package" }' }
+      context 'with victorialogs class and ensure=absent' do
+        let(:pre_condition) do
+          <<-PUPPET
+          class { 'victorialogs':
+            version => "1.2.3",
+            ensure => 'absent',
+          }
+          PUPPET
+        end
 
-        context 'with default params' do
-          it do
-            is_expected.to contain_systemd__unit_file('victorialogs-example.service')
-              .with_ensure('present')
-              .with_active(true)
-              .with_enable(true)
-              .with_content(%r{^Description=VictoriaLogs example$})
-              .with_content(%r{^User=victorialogs$})
-              .with_content(%r{^Group=victorialogs$})
-              .with_content(%r{^ExecStart=/usr/bin/victoria-logs-prod$})
-          end
+        it do
+          is_expected.to contain_systemd__unit_file('victorialogs-example.service')
+            .with_ensure('absent')
+            .with_active(false)
+            .with_enable(false)
+        end
+      end
+
+      context 'with victorialogs class and install_method=package' do
+        let(:pre_condition) do
+          <<-PUPPET
+          class { 'victorialogs':
+            install_method => 'package',
+            binary_path => '/usr/bin/victoria-logs-prod',
+          }
+          PUPPET
+        end
+
+        it do
+          is_expected.to contain_systemd__unit_file('victorialogs-example.service')
+            .with_ensure('present')
+            .with_active(true)
+            .with_enable(true)
+            .with_content(%r{^Description=VictoriaLogs example$})
+            .with_content(%r{^User=victorialogs$})
+            .with_content(%r{^Group=victorialogs$})
+            .with_content(%r{^ExecStart=/usr/bin/victoria-logs-prod$})
         end
       end
 

@@ -1,10 +1,10 @@
 # @summary Main class to manage VictoriaLogs
 #
 # @example
-#   Run a single-node VictoriaLogs:
+#   # Run a single-node VictoriaLogs:
 #
 #   class { 'victorialogs':
-#     version   => '1.49.0',
+#     version   => '1.52.0',
 #   }
 #
 # @param ensure
@@ -46,7 +46,7 @@
 #   based on version and edition.
 # @param binary_path
 #   Specify where to look for the VictoriaLogs binary. Required when
-#   install_method is 'none'. Auto-guessed otherwise.
+#   install_method is 'none' or 'package'.
 # @param instances
 #   A hash of VictoriaLogs instances to manage. Keys are instance names, values
 #   are hashes of instance options.
@@ -54,20 +54,20 @@ class victorialogs (
   Enum['absent', 'present'] $ensure = 'present',
   Enum['oss', 'enterprise'] $edition = 'oss',
   Enum['archive', 'package', 'none'] $install_method = 'archive',
-  Boolean $manage_group = true,
-  String[1] $group = 'victorialogs',
   Boolean $manage_user = true,
+  Boolean $manage_group = $manage_user,
+  Boolean $manage_homedir = $manage_user,
+  String[1] $group = 'victorialogs',
   String[1] $user = 'victorialogs',
   String[1] $shell = '/usr/sbin/nologin',
   String[1] $homedir = '/var/lib/victorialogs',
-  Boolean $manage_homedir = true,
   Stdlib::Filemode $homedir_mode = '0750',
   String[1] $homedir_owner = $user,
   String[1] $homedir_group = $group,
   Optional[String[1]] $version = undef,
   String[1] $package_name = 'victorialogs',
-  Optional[Stdlib::HTTPUrl] $download_url = victorialogs::github_download_url($version, $edition, 'archive'),
-  Optional[Stdlib::HTTPUrl] $checksum_url = victorialogs::github_download_url($version, $edition, 'checksum'),
+  Optional[Stdlib::HTTPUrl] $download_url = victorialogs::github_download_url('victoria-logs', $version, $edition, 'archive'),
+  Optional[Stdlib::HTTPUrl] $checksum_url = victorialogs::github_download_url('victoria-logs', $version, $edition, 'checksum'),
   Optional[Stdlib::Absolutepath] $binary_path = undef,
   Hash[String[1], Victorialogs::InstanceType] $instances = {
     single => {
@@ -79,53 +79,33 @@ class victorialogs (
     },
   },
 ) {
-  $group_res = if $manage_group {
-    group { $group:
-      ensure => $ensure,
-      system => true,
-    }
-  } else {
-    undef
-  }
-
-  $user_res = if $manage_user {
-    user { $user:
-      ensure     => $ensure,
-      comment    => 'VictoriaLogs user',
-      system     => true,
-      gid        => $group,
-      shell      => $shell,
-      home       => $homedir,
-      managehome => false,
-      before     => if $ensure == 'absent' { $group_res } else { undef },
-    }
-  } else {
-    undef
-  }
-
-  $homedir_res = if $manage_homedir {
-    file { $homedir:
-      ensure  => stdlib::ensure($ensure, 'directory'),
-      mode    => $homedir_mode,
-      owner   => $homedir_owner,
-      group   => $homedir_group,
-      recurse => if $ensure == 'absent' { true } else { undef },
-      force   => if $ensure == 'absent' { true } else { undef },
-    }
-  } else {
-    undef
+  victorialogs::install::os_user { $user:
+    ensure         => $ensure,
+    manage_group   => $manage_group,
+    group          => $group,
+    manage_user    => $manage_user,
+    user           => $user,
+    shell          => $shell,
+    homedir        => $homedir,
+    manage_homedir => $manage_homedir,
+    homedir_mode   => $homedir_mode,
+    homedir_owner  => $homedir_owner,
+    homedir_group  => $homedir_group,
   }
 
   contain victorialogs::install
 
-  $instance_deps = if $ensure =='absent' {
+  $instance_deps = if $ensure == 'absent' {
     {
-      before => [$group_res, $user_res, $homedir_res, Class['Victorialogs::Install']],
+      before => [
+        Victorialogs::Install::Os_user[$user],
+        Class['Victorialogs::Install'],
+      ],
     }
   } else {
     {
+      require   => Victorialogs::Install::Os_user[$user],
       subscribe => Class['Victorialogs::Install'],
-      require   => [$group_res, $user_res, $homedir_res],
     }
   }
 

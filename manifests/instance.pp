@@ -74,7 +74,8 @@ define victorialogs::instance (
     ensure  => $ensure,
     active  => $real_service_active,
     enable  => $real_service_enable,
-    content => epp('victorialogs/victorialogs.service.epp', {
+    content => epp('victorialogs/systemd.service.epp', {
+      description   => "VictoriaLogs ${name}",
       instance_name => $name,
       service_name  => $service_name,
       user          => $user,

@@ -12,7 +12,7 @@ describe 'victorialogs' do
       end
 
       context 'with install_method=package' do
-        let(:params) { { install_method: 'package' } }
+        let(:params) { { install_method: 'package', binary_path: '/usr/bin/victoria-logs-prod' } }
 
         it { is_expected.not_to contain_file('/opt/victorialogs-1.2.3-oss') }
         it { is_expected.not_to contain_archive('/tmp/victorialogs-1.2.3-oss.tar.gz') }
@@ -42,12 +42,7 @@ describe 'victorialogs' do
 
       # With install_method=none user should specify where the victorialogs binary is explicitly
       context 'with install_method=none' do
-        let(:params) do
-          {
-            install_method: 'none',
-            binary_path: '/opt/bin/victorialogs',
-          }
-        end
+        let(:params) { { install_method: 'none', binary_path: '/opt/bin/victorialogs' } }
 
         it { is_expected.not_to contain_file('/opt/victorialogs-1.2.3-oss') }
         it { is_expected.not_to contain_archive('/tmp/victorialogs-1.2.3-oss.tar.gz') }
@@ -84,7 +79,6 @@ describe 'victorialogs' do
 
         it do
           is_expected.to contain_archive('/tmp/victorialogs-1.2.3-oss.tar.gz')
-            .with_ensure('present')
             .with_source(
               'https://github.com/VictoriaMetrics/VictoriaLogs/releases/download/v1.2.3/victoria-logs-linux-amd64-v1.2.3.tar.gz',
             )
@@ -160,6 +154,8 @@ describe 'victorialogs' do
           let(:params) { super().merge(manage_user: false) }
 
           it { is_expected.not_to contain_user('victorialogs') }
+          it { is_expected.not_to contain_group('victorialogs') }
+          it { is_expected.not_to contain_file('/var/lib/victorialogs') }
         end
 
         context 'with user set' do
