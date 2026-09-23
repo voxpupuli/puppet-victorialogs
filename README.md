@@ -8,14 +8,30 @@
 
 ## Description
 
-This module installs and configures [VictoriaLogs](https://victoriametrics.com/products/victorialogs/)
+This module installs and configures [VictoriaLogs](https://victoriametrics.com/products/victorialogs/) components:
+
+- VictoriaLogs server instances
+- [vlagent](https://docs.victoriametrics.com/victorialogs/vlagent/) instances
+- [vlogscli](https://docs.victoriametrics.com/victorialogs/querying/vlogscli/)
 
 ## Usage
 
-### Run a single-node VictoriaLogs
+### Run a single-node VictoriaLogs of a specific version
+
+```puppet
+class { 'victorialogs':
+  version => '1.50.0',
+}
+```
+
+### Same as above, but configured in Hiera
 
 ```puppet
 include victorialogs
+```
+
+```yaml
+victorialogs::version: "1.50.0"
 ```
 
 ### Run a single-node VictoriaLogs of a specific version with 2 syslog inputs
@@ -80,6 +96,77 @@ victorialogs::instances:
         "syslog.tlsCertFile": "/path/to/tls/cert"
 ```
 
+### Forward logs to VictoriaLogs with vlagent
+
+`victorialogs::vlagent` inherits `version`, `edition` and `install_method`
+from the main `victorialogs` class when set, so in the simplest case you only
+declare instances. At least one `remoteWrite.url` option is required per
+instance.
+
+```puppet
+class { 'victorialogs::vlagent':
+  version   => '1.52.0',
+  instances => {
+    forward_to_local => {
+      options => {
+        'common' => {
+          'remoteWrite.url' => 'http://localhost:9428/insert/native',
+          'remoteWrite.tmpDataPath' => '/var/lib/vlagent/forward_to_local',
+        },
+      },
+    },
+  },
+}
+```
+
+Same as above, but configured in Hiera:
+
+```puppet
+include victorialogs::vlagent
+```
+
+```yaml
+victorialogs::vlagent::version: "1.52.0"
+victorialogs::vlagent::instances:
+  forward_to_local:
+    options:
+      common:
+        "remoteWrite.url": "http://localhost:9428/insert/native"
+        "remoteWrite.tmpDataPath": "/var/lib/vlagent/forward_to_local"
+```
+
+### Install the vlogscli tool
+
+`victorialogs::vlogscli` installs only the `vlogscli` binary from the
+`vlutils` bundle. It also inherits `version`, `edition` and `install_method`
+from the main `victorialogs` class when set.
+
+```puppet
+class { 'victorialogs::vlogscli':
+  version => '1.52.0',
+}
+```
+
+Same as above, but configured in Hiera:
+
+```puppet
+include victorialogs::vlogscli
+```
+
+```yaml
+victorialogs::vlogscli::version: "1.52.0"
+```
+
+## Implementation notes
+
+### `vlutils` archive downloaded twice
+
+When both `victorialogs::vlagent` and `victorialogs::vlogscli` use the `archive`
+install method and resolve to the same version, the `vlutils` archive is
+downloaded twice — once by each component's install class. This is intentional:
+sharing a single `archive` resource between the two would require complex
+and fragile workarounds. The duplicate download is a trade-off for simpler and easier-to-understand implementation.
+
 ## Development
 
 ### Regenerating CLI Options Type
@@ -103,6 +190,14 @@ You can also specify a specific version to use.
 
 ```bash
 bundle exec rake victorialogs:generate_cli_options[1.49.0]
+```
+
+### Regenerating `vlagent` CLI Options Type
+
+Similar to the above, `types/vlagent/option.pp` contains generated Enum of all vlagent CLI options. Use following rake task to regenerate it:
+
+```bash
+bundle exec rake vlagent:generate_cli_options
 ```
 
 ## Reference
