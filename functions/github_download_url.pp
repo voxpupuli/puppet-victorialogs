@@ -1,4 +1,7 @@
 # @summary Make a Github release artifact URL for specified version & edition
+# @param component
+#   Which release component to download: `victoria-logs` server archive or
+#   `vlutils` bundle archive.
 # @param version
 #   VictoriaLogs version.
 # @param edition
@@ -9,6 +12,7 @@
 #   Returns Github artifact download URL if version is specified. Returns undef
 #   otherwise.
 function victorialogs::github_download_url(
+  Enum['victoria-logs', 'vlutils'] $component,
   Optional[String[1]] $version,
   Enum['oss', 'enterprise'] $edition,
   Enum['archive', 'checksum'] $download_type,
@@ -35,7 +39,7 @@ function victorialogs::github_download_url(
 
   $url = @("URL"/L)
     https://github.com/VictoriaMetrics/VictoriaLogs/releases/download/v${version}/\
-    victoria-logs-${facts['kernel'].downcase}-${arch}-v${version}${$edition_suffix}${tail}
+    ${component}-${facts['kernel'].downcase}-${arch}-v${version}${$edition_suffix}${tail}
     |-URL
 
   $url

@@ -9,14 +9,26 @@
 #### Public Classes
 
 * [`victorialogs`](#victorialogs): Main class to manage VictoriaLogs
+* [`victorialogs::vlagent`](#victorialogs--vlagent): Manage vlagent
+* [`victorialogs::vlogscli`](#victorialogs--vlogscli): Manage vlogscli tool
 
 #### Private Classes
 
 * `victorialogs::install`: VictoriaLogs installation class
+* `victorialogs::vlagent::install`: VictoriaLogs vlagent installation class
+* `victorialogs::vlogscli::install`: VictoriaLogs vlogscli installation class
 
 ### Defined types
 
+#### Public Defined types
+
 * [`victorialogs::instance`](#victorialogs--instance): Defined resource type to manage a VictoriaLogs instance
+* [`victorialogs::vlagent::instance`](#victorialogs--vlagent--instance): Defined resource type to manage a vlagent instance
+
+#### Private Defined types
+
+* `victorialogs::install::archive`: Manage a binary installation from a release archive
+* `victorialogs::install::os_user`: Manage OS user for VictoriaLogs and vlagent
 
 ### Functions
 
@@ -27,6 +39,9 @@
 * [`Victorialogs::InstanceType`](#Victorialogs--InstanceType): VictoriaLogs instance type
 * [`Victorialogs::Option`](#Victorialogs--Option): VictoriaLogs CLI option type
 * [`Victorialogs::Options`](#Victorialogs--Options): VictoriaLogs CLI options type
+* [`Victorialogs::Vlagent::InstanceType`](#Victorialogs--Vlagent--InstanceType): VictoriaLogs vlagent instance type
+* [`Victorialogs::Vlagent::Option`](#Victorialogs--Vlagent--Option): VictoriaLogs vlagent CLI option type
+* [`Victorialogs::Vlagent::Options`](#Victorialogs--Vlagent--Options): VictoriaLogs vlagent CLI options type
 
 ## Classes
 
@@ -39,10 +54,10 @@ Main class to manage VictoriaLogs
 ##### 
 
 ```puppet
-Run a single-node VictoriaLogs:
+# Run a single-node VictoriaLogs:
 
 class { 'victorialogs':
-  version   => '1.49.0',
+  version   => '1.52.0',
 }
 ```
 
@@ -132,7 +147,7 @@ Data type: `Boolean`
 
 Whether to manage the VictoriaLogs home directory.
 
-Default value: `true`
+Default value: `$manage_user`
 
 ##### <a name="-victorialogs--homedir_mode"></a>`homedir_mode`
 
@@ -164,7 +179,7 @@ Data type: `Boolean`
 
 Whether to manage the VictoriaLogs group.
 
-Default value: `true`
+Default value: `$manage_user`
 
 ##### <a name="-victorialogs--group"></a>`group`
 
@@ -198,7 +213,7 @@ Data type: `Optional[Stdlib::HTTPUrl]`
 The URL to download VictoriaLogs from. Defaults to GitHub releases based on
 version and edition.
 
-Default value: `victorialogs::github_download_url($version, $edition, 'archive')`
+Default value: `victorialogs::github_download_url('victoria-logs', $version, $edition, 'archive')`
 
 ##### <a name="-victorialogs--checksum_url"></a>`checksum_url`
 
@@ -207,14 +222,14 @@ Data type: `Optional[Stdlib::HTTPUrl]`
 The URL to download the checksum file from. Defaults to GitHub releases
 based on version and edition.
 
-Default value: `victorialogs::github_download_url($version, $edition, 'checksum')`
+Default value: `victorialogs::github_download_url('victoria-logs', $version, $edition, 'checksum')`
 
 ##### <a name="-victorialogs--binary_path"></a>`binary_path`
 
 Data type: `Optional[Stdlib::Absolutepath]`
 
 Specify where to look for the VictoriaLogs binary. Required when
-install_method is 'none'. Auto-guessed otherwise.
+install_method is 'none' or 'package'.
 
 Default value: `undef`
 
@@ -238,6 +253,315 @@ Default value:
     },
   }
 ```
+
+### <a name="victorialogs--vlagent"></a>`victorialogs::vlagent`
+
+Manage vlagent
+
+#### Examples
+
+##### 
+
+```puppet
+# Forward logs to a local VictoriaLogs:
+
+class { 'victorialogs::vlagent':
+  version   => '1.52.0',
+  instances => {
+    single => {
+      options => {
+        common => {
+          'remoteWrite.url' => 'http://localhost:9428/insert/native',
+        },
+      },
+    },
+  },
+}
+```
+
+#### Parameters
+
+The following parameters are available in the `victorialogs::vlagent` class:
+
+* [`ensure`](#-victorialogs--vlagent--ensure)
+* [`edition`](#-victorialogs--vlagent--edition)
+* [`install_method`](#-victorialogs--vlagent--install_method)
+* [`manage_user`](#-victorialogs--vlagent--manage_user)
+* [`manage_group`](#-victorialogs--vlagent--manage_group)
+* [`manage_homedir`](#-victorialogs--vlagent--manage_homedir)
+* [`group`](#-victorialogs--vlagent--group)
+* [`user`](#-victorialogs--vlagent--user)
+* [`shell`](#-victorialogs--vlagent--shell)
+* [`homedir`](#-victorialogs--vlagent--homedir)
+* [`homedir_mode`](#-victorialogs--vlagent--homedir_mode)
+* [`homedir_owner`](#-victorialogs--vlagent--homedir_owner)
+* [`homedir_group`](#-victorialogs--vlagent--homedir_group)
+* [`version`](#-victorialogs--vlagent--version)
+* [`package_name`](#-victorialogs--vlagent--package_name)
+* [`download_url`](#-victorialogs--vlagent--download_url)
+* [`checksum_url`](#-victorialogs--vlagent--checksum_url)
+* [`binary_path`](#-victorialogs--vlagent--binary_path)
+* [`instances`](#-victorialogs--vlagent--instances)
+
+##### <a name="-victorialogs--vlagent--ensure"></a>`ensure`
+
+Data type: `Enum['absent', 'present']`
+
+Whether to install or remove vlagent.
+
+Default value: `'present'`
+
+##### <a name="-victorialogs--vlagent--edition"></a>`edition`
+
+Data type: `Enum['oss', 'enterprise']`
+
+vlagent edition to install. Defaults to `victorialogs::edition` when set,
+`oss` otherwise.
+
+Default value: `getvar('victorialogs::edition').lest || { 'oss' }`
+
+##### <a name="-victorialogs--vlagent--install_method"></a>`install_method`
+
+Data type: `Enum['archive', 'package', 'none']`
+
+How to install vlagent. Defaults to `victorialogs::install_method` when
+set, `archive` otherwise.
+
+Default value: `getvar('victorialogs::install_method').lest || { 'archive' }`
+
+##### <a name="-victorialogs--vlagent--manage_user"></a>`manage_user`
+
+Data type: `Boolean`
+
+Whether to manage the vlagent user.
+
+Default value: `true`
+
+##### <a name="-victorialogs--vlagent--manage_group"></a>`manage_group`
+
+Data type: `Boolean`
+
+Whether to manage the vlagent group.
+
+Default value: `$manage_user`
+
+##### <a name="-victorialogs--vlagent--manage_homedir"></a>`manage_homedir`
+
+Data type: `Boolean`
+
+Whether to manage the vlagent home directory.
+
+Default value: `$manage_user`
+
+##### <a name="-victorialogs--vlagent--group"></a>`group`
+
+Data type: `String[1]`
+
+The name of the vlagent group.
+
+Default value: `'vlagent'`
+
+##### <a name="-victorialogs--vlagent--user"></a>`user`
+
+Data type: `String[1]`
+
+The name of the vlagent user.
+
+Default value: `'vlagent'`
+
+##### <a name="-victorialogs--vlagent--shell"></a>`shell`
+
+Data type: `String[1]`
+
+The shell for the vlagent user.
+
+Default value: `'/usr/sbin/nologin'`
+
+##### <a name="-victorialogs--vlagent--homedir"></a>`homedir`
+
+Data type: `String[1]`
+
+The home directory for the vlagent user.
+
+Default value: `"/var/lib/${user}"`
+
+##### <a name="-victorialogs--vlagent--homedir_mode"></a>`homedir_mode`
+
+Data type: `Stdlib::Filemode`
+
+The file mode for the vlagent home directory.
+
+Default value: `'0750'`
+
+##### <a name="-victorialogs--vlagent--homedir_owner"></a>`homedir_owner`
+
+Data type: `String[1]`
+
+The owner of the vlagent home directory.
+
+Default value: `$user`
+
+##### <a name="-victorialogs--vlagent--homedir_group"></a>`homedir_group`
+
+Data type: `String[1]`
+
+The group of the vlagent home directory.
+
+Default value: `$group`
+
+##### <a name="-victorialogs--vlagent--version"></a>`version`
+
+Data type: `Optional[String[1]]`
+
+The version of vlagent to install. Required when install_method is
+'archive' or 'package'. Defaults to `victorialogs::version` when set.
+
+Default value: `getvar('victorialogs::version')`
+
+##### <a name="-victorialogs--vlagent--package_name"></a>`package_name`
+
+Data type: `Optional[String[1]]`
+
+The name of the package to install when using the 'package' install method.
+Required when install_method is 'package'.
+
+Default value: `undef`
+
+##### <a name="-victorialogs--vlagent--download_url"></a>`download_url`
+
+Data type: `Optional[Stdlib::HTTPUrl]`
+
+The URL to download vlagent from. Defaults to GitHub releases based on
+version and edition.
+
+Default value: `victorialogs::github_download_url('vlutils', $version, $edition, 'archive')`
+
+##### <a name="-victorialogs--vlagent--checksum_url"></a>`checksum_url`
+
+Data type: `Optional[Stdlib::HTTPUrl]`
+
+The URL to download the checksum file from. Defaults to GitHub releases
+based on version and edition.
+
+Default value: `victorialogs::github_download_url('vlutils', $version, $edition, 'checksum')`
+
+##### <a name="-victorialogs--vlagent--binary_path"></a>`binary_path`
+
+Data type: `Optional[Stdlib::Absolutepath]`
+
+Specify where to look for the vlagent binary. Required when
+install_method is 'none' or 'package'.
+
+Default value: `undef`
+
+##### <a name="-victorialogs--vlagent--instances"></a>`instances`
+
+Data type: `Hash[String[1], Victorialogs::Vlagent::InstanceType]`
+
+A hash of vlagent instances to manage. Keys are instance names, values
+are hashes of instance options.
+
+Default value: `{}`
+
+### <a name="victorialogs--vlogscli"></a>`victorialogs::vlogscli`
+
+Manage vlogscli tool
+
+#### Examples
+
+##### 
+
+```puppet
+# Install vlogscli from archive:
+
+class { 'victorialogs::vlogscli':
+  version => '1.52.0',
+}
+```
+
+#### Parameters
+
+The following parameters are available in the `victorialogs::vlogscli` class:
+
+* [`ensure`](#-victorialogs--vlogscli--ensure)
+* [`edition`](#-victorialogs--vlogscli--edition)
+* [`install_method`](#-victorialogs--vlogscli--install_method)
+* [`version`](#-victorialogs--vlogscli--version)
+* [`package_name`](#-victorialogs--vlogscli--package_name)
+* [`download_url`](#-victorialogs--vlogscli--download_url)
+* [`checksum_url`](#-victorialogs--vlogscli--checksum_url)
+* [`binary_path`](#-victorialogs--vlogscli--binary_path)
+
+##### <a name="-victorialogs--vlogscli--ensure"></a>`ensure`
+
+Data type: `Enum['absent', 'present']`
+
+Whether to install or remove vlogscli.
+
+Default value: `'present'`
+
+##### <a name="-victorialogs--vlogscli--edition"></a>`edition`
+
+Data type: `Enum['oss', 'enterprise']`
+
+vlogscli edition to install. Defaults to `victorialogs::edition` when set,
+`oss` otherwise.
+
+Default value: `getvar('victorialogs::edition').lest || { 'oss' }`
+
+##### <a name="-victorialogs--vlogscli--install_method"></a>`install_method`
+
+Data type: `Enum['archive', 'package', 'none']`
+
+How to install vlogscli. Defaults to `victorialogs::install_method` when
+set, `archive` otherwise.
+
+Default value: `getvar('victorialogs::install_method').lest || { 'archive' }`
+
+##### <a name="-victorialogs--vlogscli--version"></a>`version`
+
+Data type: `Optional[String[1]]`
+
+The version of vlogscli to install. Required when install_method is
+'archive' or 'package'. Defaults to `victorialogs::version` when set.
+
+Default value: `getvar('victorialogs::version')`
+
+##### <a name="-victorialogs--vlogscli--package_name"></a>`package_name`
+
+Data type: `Optional[String[1]]`
+
+The name of the package to install when using the 'package' install method.
+Required when install_method is 'package'.
+
+Default value: `undef`
+
+##### <a name="-victorialogs--vlogscli--download_url"></a>`download_url`
+
+Data type: `Optional[Stdlib::HTTPUrl]`
+
+The URL to download vlogscli from. Defaults to GitHub releases based on
+version and edition.
+
+Default value: `victorialogs::github_download_url('vlutils', $version, $edition, 'archive')`
+
+##### <a name="-victorialogs--vlogscli--checksum_url"></a>`checksum_url`
+
+Data type: `Optional[Stdlib::HTTPUrl]`
+
+The URL to download the checksum file from. Defaults to GitHub releases
+based on version and edition.
+
+Default value: `victorialogs::github_download_url('vlutils', $version, $edition, 'checksum')`
+
+##### <a name="-victorialogs--vlogscli--binary_path"></a>`binary_path`
+
+Data type: `Optional[Stdlib::Absolutepath]`
+
+Specify where to look for the vlogscli binary. Required when
+install_method is 'none' or 'package'.
+
+Default value: `undef`
 
 ## Defined types
 
@@ -360,6 +684,109 @@ option values.
 
 Default value: `{}`
 
+### <a name="victorialogs--vlagent--instance"></a>`victorialogs::vlagent::instance`
+
+Defined resource type to manage a vlagent instance
+
+* **Note** While this defined resource type expects that `victorialogs::vlagent`
+class is included before, it's possible to use it standalone. It's user's
+responsibility to specify `user`, `group`, `binary_path` parameters for
+every instance then.
+
+#### Examples
+
+##### 
+
+```puppet
+# Forward logs collected to a local VictoriaLogs
+
+victorialogs::vlagent::instance { 'single':
+  options => {
+    'common' => {
+      'remoteWrite.url' => 'http://localhost:9428/insert/native',
+    },
+  },
+}
+```
+
+#### Parameters
+
+The following parameters are available in the `victorialogs::vlagent::instance` defined type:
+
+* [`ensure`](#-victorialogs--vlagent--instance--ensure)
+* [`service_active`](#-victorialogs--vlagent--instance--service_active)
+* [`service_enable`](#-victorialogs--vlagent--instance--service_enable)
+* [`service_name`](#-victorialogs--vlagent--instance--service_name)
+* [`user`](#-victorialogs--vlagent--instance--user)
+* [`group`](#-victorialogs--vlagent--instance--group)
+* [`binary_path`](#-victorialogs--vlagent--instance--binary_path)
+* [`options`](#-victorialogs--vlagent--instance--options)
+
+##### <a name="-victorialogs--vlagent--instance--ensure"></a>`ensure`
+
+Data type: `Enum['absent', 'present']`
+
+Whether to create or remove the vlagent instance.
+
+Default value: `getvar('victorialogs::vlagent::ensure').lest || { 'present' }`
+
+##### <a name="-victorialogs--vlagent--instance--service_active"></a>`service_active`
+
+Data type: `Boolean`
+
+Whether the vlagent service should be running.
+
+Default value: `true`
+
+##### <a name="-victorialogs--vlagent--instance--service_enable"></a>`service_enable`
+
+Data type: `Variant[Boolean, Enum['mask']]`
+
+Whether the vlagent service should be enabled at boot.
+
+Default value: `true`
+
+##### <a name="-victorialogs--vlagent--instance--service_name"></a>`service_name`
+
+Data type: `String[1]`
+
+The name of the systemd service unit.
+
+Default value: `"vlagent-${title}"`
+
+##### <a name="-victorialogs--vlagent--instance--user"></a>`user`
+
+Data type: `String[1]`
+
+The user to run vlagent as.
+
+Default value: `$victorialogs::vlagent::user`
+
+##### <a name="-victorialogs--vlagent--instance--group"></a>`group`
+
+Data type: `String[1]`
+
+The group to run vlagent as.
+
+Default value: `$victorialogs::vlagent::group`
+
+##### <a name="-victorialogs--vlagent--instance--binary_path"></a>`binary_path`
+
+Data type: `Stdlib::Absolutepath`
+
+The path to the vlagent binary.
+
+Default value: `$victorialogs::vlagent::install::binary_path`
+
+##### <a name="-victorialogs--vlagent--instance--options"></a>`options`
+
+Data type: `Hash[String[1], Victorialogs::Vlagent::Options]`
+
+A hash of vlagent CLI options. Keys are option names, values are
+option values.
+
+Default value: `{}`
+
 ## Functions
 
 ### <a name="victorialogs--github_download_url"></a>`victorialogs::github_download_url`
@@ -368,12 +795,19 @@ Type: Puppet Language
 
 Make a Github release artifact URL for specified version & edition
 
-#### `victorialogs::github_download_url(Optional[String[1]] $version, Enum['oss', 'enterprise'] $edition, Enum['archive', 'checksum'] $download_type)`
+#### `victorialogs::github_download_url(Enum['victoria-logs', 'vlutils'] $component, Optional[String[1]] $version, Enum['oss', 'enterprise'] $edition, Enum['archive', 'checksum'] $download_type)`
 
 The victorialogs::github_download_url function.
 
 Returns: `Optional[String[1]]` Returns Github artifact download URL if version is specified. Returns undef
 otherwise.
+
+##### `component`
+
+Data type: `Enum['victoria-logs', 'vlutils']`
+
+Which release component to download: `victoria-logs` server archive or
+`vlutils` bundle archive.
 
 ##### `version`
 
@@ -418,7 +852,8 @@ Struct[{
 
 VictoriaLogs CLI option type
 
-* **Note** This type is generated with `rake victorialogs:generate_cli_options`
+* **Note** This type is generated from victoria-logs-prod v1.52.0 CLI help output
+using `rake victorialogs:generate_cli_options`
 
 Alias of `Enum['blockcache.missesBeforeCaching', 'datadog.ignoreFields', 'datadog.maxRequestSize', 'datadog.streamFields', 'defaultMsgValue', 'defaultParallelReaders', 'delete.enable', 'elasticsearch.version', 'enableTCP6', 'envflag.enable', 'envflag.prefix', 'filestream.disableFadvise', 'flagsAuthKey', 'forceFlushAuthKey', 'forceMergeAuthKey', 'fs.disableMincore', 'fs.disableMmap', 'fs.maxConcurrency', 'futureRetention', 'http.connTimeout', 'http.disableCORS', 'http.disableKeepAlive', 'http.disableResponseCompression', 'http.header.csp', 'http.header.disableServerHostname', 'http.header.frameOptions', 'http.header.hsts', 'http.idleConnTimeout', 'http.maxGracefulShutdownDuration', 'http.pathPrefix', 'http.shutdownDelay', 'httpAuth.password', 'httpAuth.username', 'httpListenAddr', 'httpListenAddr.useProxyProtocol', 'inmemoryDataFlushInterval', 'insert.concurrency', 'insert.disable', 'insert.disableCompression', 'insert.maxFieldsPerLine', 'insert.maxLineSizeBytes', 'insert.maxQueueDuration', 'internStringCacheExpireDuration', 'internStringDisableCache', 'internStringMaxLen', 'internaldelete.enable', 'internalinsert.disable', 'internalinsert.maxRequestSize', 'internalselect.disable', 'internalselect.maxConcurrentRequests', 'journald.ignoreFields', 'journald.includeEntryMetadata', 'journald.streamFields', 'journald.tenantID', 'journald.timeField', 'journald.useRemoteIP', 'license', 'license.forceOffline', 'licenseFile', 'licenseFile.reloadInterval', 'logIngestedRows', 'logNewStreams', 'logNewStreamsAuthKey', 'loggerDisableTimestamps', 'loggerErrorsPerSecondLimit', 'loggerFormat', 'loggerJSONFields', 'loggerLevel', 'loggerMaxArgLen', 'loggerOutput', 'loggerTimezone', 'loggerWarnsPerSecondLimit', 'loki.disableMessageParsing', 'loki.maxRequestSize', 'loki.messageFieldsPrefix', 'maxBackfillAge', 'maxConcurrentInserts', 'memory.allowedBytes', 'memory.allowedPercent', 'metrics.exposeMetadata', 'metricsAuthKey', 'mtls', 'mtlsCAFile', 'nativeinsert.maxRequestSize', 'opentelemetry.maxRequestSize', 'partitionManageAuthKey', 'pprofAuthKey', 'pushmetrics.disableCompression', 'pushmetrics.extraLabel', 'pushmetrics.header', 'pushmetrics.interval', 'pushmetrics.url', 'retention.maxDiskSpaceUsageBytes', 'retention.maxDiskUsagePercent', 'retentionPeriod', 'search.allowPartialResponse', 'search.logSlowQueryDuration', 'search.maxConcurrentRequests', 'search.maxQueryDuration', 'search.maxQueryLen', 'search.maxQueryTimeRange', 'search.maxQueueDuration', 'secret.flags', 'select.disable', 'select.disableCompression', 'snapshotsMaxAge', 'splunk.ignoreFields', 'splunk.maxRequestSize', 'splunk.msgField', 'splunk.preserveJSONKeys', 'splunk.streamFields', 'splunk.tenantID', 'splunk.timeField', 'storage.minFreeDiskSpaceBytes', 'storageDataPath', 'storageNode', 'storageNode.bearerToken', 'storageNode.bearerTokenFile', 'storageNode.password', 'storageNode.passwordFile', 'storageNode.tls', 'storageNode.tlsCAFile', 'storageNode.tlsCertFile', 'storageNode.tlsInsecureSkipVerify', 'storageNode.tlsKeyFile', 'storageNode.tlsServerName', 'storageNode.username', 'storageNode.usernameFile', 'syslog.compressMethod.tcp', 'syslog.compressMethod.udp', 'syslog.compressMethod.unix', 'syslog.decolorizeFields.tcp', 'syslog.decolorizeFields.udp', 'syslog.decolorizeFields.unix', 'syslog.extraFields.tcp', 'syslog.extraFields.udp', 'syslog.extraFields.unix', 'syslog.ignoreFields.tcp', 'syslog.ignoreFields.udp', 'syslog.ignoreFields.unix', 'syslog.listenAddr.tcp', 'syslog.listenAddr.udp', 'syslog.listenAddr.unix', 'syslog.mtls', 'syslog.mtlsCAFile', 'syslog.streamFields.tcp', 'syslog.streamFields.udp', 'syslog.streamFields.unix', 'syslog.tenantID.tcp', 'syslog.tenantID.udp', 'syslog.tenantID.unix', 'syslog.timezone', 'syslog.tls', 'syslog.tlsCertFile', 'syslog.tlsCipherSuites', 'syslog.tlsKeyFile', 'syslog.tlsMinVersion', 'syslog.useLocalTimestamp.tcp', 'syslog.useLocalTimestamp.udp', 'syslog.useLocalTimestamp.unix', 'syslog.useRemoteIP.tcp', 'syslog.useRemoteIP.udp', 'syslog.useRemoteIP.unix', 'tls', 'tlsAutocertCacheDir', 'tlsAutocertEmail', 'tlsAutocertHosts', 'tlsCertFile', 'tlsCipherSuites', 'tlsKeyFile', 'tlsMinVersion', 'vmalert.proxyURL']`
 
@@ -427,4 +862,38 @@ Alias of `Enum['blockcache.missesBeforeCaching', 'datadog.ignoreFields', 'datado
 VictoriaLogs CLI options type
 
 Alias of `Hash[Victorialogs::Option, Data]`
+
+### <a name="Victorialogs--Vlagent--InstanceType"></a>`Victorialogs::Vlagent::InstanceType`
+
+VictoriaLogs vlagent instance type
+
+Alias of
+
+```puppet
+Struct[{
+  Optional[ensure]         => Enum['absent', 'present'],
+  Optional[service_active] => Boolean,
+  Optional[service_enable] => Variant[Boolean, Enum['mask']],
+  Optional[service_name]   => String[1],
+  Optional[user]           => String[1],
+  Optional[group]          => String[1],
+  Optional[binary_path]    => Stdlib::Absolutepath,
+  Optional[options]        => Hash[String[1], Victorialogs::Vlagent::Options],
+}]
+```
+
+### <a name="Victorialogs--Vlagent--Option"></a>`Victorialogs::Vlagent::Option`
+
+VictoriaLogs vlagent CLI option type
+
+* **Note** This type is generated from vlagent-prod v1.52.0 CLI help output
+using `rake vlagent:generate_cli_options`
+
+Alias of `Enum['blockcache.missesBeforeCaching', 'datadog.ignoreFields', 'datadog.maxRequestSize', 'datadog.streamFields', 'defaultMsgValue', 'elasticsearch.version', 'enableTCP6', 'envflag.enable', 'envflag.prefix', 'fileCollector.checkpointsPath', 'fileCollector.decolorizeFields', 'fileCollector.excludeGlob', 'fileCollector.extraFields', 'fileCollector.fileField', 'fileCollector.glob', 'fileCollector.hostnameField', 'fileCollector.ignoreFields', 'fileCollector.msgField', 'fileCollector.refreshInterval', 'fileCollector.streamFields', 'fileCollector.tenantID', 'fileCollector.timeField', 'filestream.disableFadvise', 'flagsAuthKey', 'fs.disableMincore', 'fs.disableMmap', 'fs.maxConcurrency', 'http.connTimeout', 'http.disableCORS', 'http.disableKeepAlive', 'http.disableResponseCompression', 'http.header.csp', 'http.header.disableServerHostname', 'http.header.frameOptions', 'http.header.hsts', 'http.idleConnTimeout', 'http.maxGracefulShutdownDuration', 'http.pathPrefix', 'http.shutdownDelay', 'httpAuth.password', 'httpAuth.username', 'httpListenAddr', 'httpListenAddr.useProxyProtocol', 'insert.disable', 'insert.maxFieldsPerLine', 'insert.maxLineSizeBytes', 'insert.maxQueueDuration', 'internStringCacheExpireDuration', 'internStringDisableCache', 'internStringMaxLen', 'internalinsert.disable', 'internalinsert.maxRequestSize', 'journald.ignoreFields', 'journald.includeEntryMetadata', 'journald.streamFields', 'journald.tenantID', 'journald.timeField', 'journald.useRemoteIP', 'kubernetesCollector', 'kubernetesCollector.checkpointsPath', 'kubernetesCollector.decolorizeFields', 'kubernetesCollector.excludeFilter', 'kubernetesCollector.extraFields', 'kubernetesCollector.ignoreFields', 'kubernetesCollector.includeNamespaceAnnotations', 'kubernetesCollector.includeNamespaceLabels', 'kubernetesCollector.includeNodeAnnotations', 'kubernetesCollector.includeNodeLabels', 'kubernetesCollector.includePodAnnotations', 'kubernetesCollector.includePodLabels', 'kubernetesCollector.logsPath', 'kubernetesCollector.msgField', 'kubernetesCollector.streamFields', 'kubernetesCollector.tenantID', 'kubernetesCollector.timeField', 'license', 'license.forceOffline', 'licenseFile', 'licenseFile.reloadInterval', 'loggerDisableTimestamps', 'loggerErrorsPerSecondLimit', 'loggerFormat', 'loggerJSONFields', 'loggerLevel', 'loggerMaxArgLen', 'loggerOutput', 'loggerTimezone', 'loggerWarnsPerSecondLimit', 'loki.disableMessageParsing', 'loki.maxRequestSize', 'loki.messageFieldsPrefix', 'maxConcurrentInserts', 'memory.allowedBytes', 'memory.allowedPercent', 'metrics.exposeMetadata', 'metricsAuthKey', 'mtls', 'mtlsCAFile', 'nativeinsert.maxRequestSize', 'opentelemetry.maxRequestSize', 'pprofAuthKey', 'pushmetrics.disableCompression', 'pushmetrics.extraLabel', 'pushmetrics.header', 'pushmetrics.interval', 'pushmetrics.url', 'remoteWrite.basicAuth.password', 'remoteWrite.basicAuth.passwordFile', 'remoteWrite.basicAuth.username', 'remoteWrite.basicAuth.usernameFile', 'remoteWrite.bearerToken', 'remoteWrite.bearerTokenFile', 'remoteWrite.flushInterval', 'remoteWrite.format', 'remoteWrite.headers', 'remoteWrite.maxBlockSize', 'remoteWrite.maxDiskUsagePerURL', 'remoteWrite.oauth2.clientID', 'remoteWrite.oauth2.clientSecret', 'remoteWrite.oauth2.clientSecretFile', 'remoteWrite.oauth2.endpointParams', 'remoteWrite.oauth2.scopes', 'remoteWrite.oauth2.tokenUrl', 'remoteWrite.proxyURL', 'remoteWrite.queues', 'remoteWrite.rateLimit', 'remoteWrite.retryMaxTime', 'remoteWrite.retryMinInterval', 'remoteWrite.sendTimeout', 'remoteWrite.showURL', 'remoteWrite.tlsCAFile', 'remoteWrite.tlsCertFile', 'remoteWrite.tlsHandshakeTimeout', 'remoteWrite.tlsInsecureSkipVerify', 'remoteWrite.tlsKeyFile', 'remoteWrite.tlsServerName', 'remoteWrite.tmpDataPath', 'remoteWrite.url', 'secret.flags', 'splunk.ignoreFields', 'splunk.maxRequestSize', 'splunk.msgField', 'splunk.preserveJSONKeys', 'splunk.streamFields', 'splunk.tenantID', 'splunk.timeField', 'syslog.compressMethod.tcp', 'syslog.compressMethod.udp', 'syslog.compressMethod.unix', 'syslog.decolorizeFields.tcp', 'syslog.decolorizeFields.udp', 'syslog.decolorizeFields.unix', 'syslog.extraFields.tcp', 'syslog.extraFields.udp', 'syslog.extraFields.unix', 'syslog.ignoreFields.tcp', 'syslog.ignoreFields.udp', 'syslog.ignoreFields.unix', 'syslog.listenAddr.tcp', 'syslog.listenAddr.udp', 'syslog.listenAddr.unix', 'syslog.mtls', 'syslog.mtlsCAFile', 'syslog.streamFields.tcp', 'syslog.streamFields.udp', 'syslog.streamFields.unix', 'syslog.tenantID.tcp', 'syslog.tenantID.udp', 'syslog.tenantID.unix', 'syslog.timezone', 'syslog.tls', 'syslog.tlsCertFile', 'syslog.tlsCipherSuites', 'syslog.tlsKeyFile', 'syslog.tlsMinVersion', 'syslog.useLocalTimestamp.tcp', 'syslog.useLocalTimestamp.udp', 'syslog.useLocalTimestamp.unix', 'syslog.useRemoteIP.tcp', 'syslog.useRemoteIP.udp', 'syslog.useRemoteIP.unix', 'tls', 'tlsAutocertCacheDir', 'tlsAutocertEmail', 'tlsAutocertHosts', 'tlsCertFile', 'tlsCipherSuites', 'tlsKeyFile', 'tlsMinVersion', 'tmpDataPath']`
+
+### <a name="Victorialogs--Vlagent--Options"></a>`Victorialogs::Vlagent::Options`
+
+VictoriaLogs vlagent CLI options type
+
+Alias of `Hash[Victorialogs::Vlagent::Option, Data]`
 

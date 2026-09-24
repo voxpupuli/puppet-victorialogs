@@ -1,13 +1,14 @@
 <%-|
+  String[1] $description,
   String[1] $instance_name,
   String[1] $service_name,
   String[1] $user,
   String[1] $group,
   Stdlib::Absolutepath $binary_path,
-  Array[Victorialogs::Options] $args,
+  Array[Variant[Victorialogs::Options,Victorialogs::Vlagent::Options]] $args,
 |-%>
 [Unit]
-Description=VictoriaLogs <%= $instance_name %>
+Description=<%= $description %>
 
 [Service]
 Type=simple

@@ -80,6 +80,114 @@ victorialogs::instances:
         "syslog.tlsCertFile": "/path/to/tls/cert"
 ```
 
+### Forward logs to VictoriaLogs with vlagent
+
+`victorialogs::vlagent` inherits `version`, `edition` and `install_method`
+from the main `victorialogs` class when set, so in the simplest case you only
+declare instances. At least one `remoteWrite.url` option is required per
+instance.
+
+```puppet
+class { 'victorialogs::vlagent':
+  version   => '1.52.0',
+  instances => {
+    single => {
+      options => {
+        'common' => {
+          'remoteWrite.url' => 'http://localhost:9428/insert/native',
+        },
+      },
+    },
+  },
+}
+```
+
+Same as above, but configured in Hiera:
+
+```puppet
+include victorialogs::vlagent
+```
+
+```yaml
+victorialogs::vlagent::version: "1.52.0"
+victorialogs::vlagent::instances:
+  single:
+    options:
+      common:
+        "remoteWrite.url": "http://localhost:9428/insert/native"
+```
+
+Install from a package or use an externally managed binary instead of the
+default GitHub archive:
+
+```puppet
+class { 'victorialogs::vlagent':
+  install_method => 'package',
+  package_name   => 'vlagent',
+  version        => '1.52.0',
+  instances      => {
+    single => {
+      options => {
+        'common' => {
+          'remoteWrite.url' => 'http://localhost:9428/insert/native',
+        },
+      },
+    },
+  },
+}
+
+class { 'victorialogs::vlagent':
+  install_method => 'none',
+  binary_path    => '/usr/local/bin/vlagent-prod',
+  instances      => {
+    single => {
+      options => {
+        'common' => {
+          'remoteWrite.url' => 'http://localhost:9428/insert/native',
+        },
+      },
+    },
+  },
+}
+```
+
+### Install the vlogscli tool
+
+`victorialogs::vlogscli` installs only the `vlogscli` binary from the
+`vlutils` bundle. It also inherits `version`, `edition` and `install_method`
+from the main `victorialogs` class when set.
+
+```puppet
+class { 'victorialogs::vlogscli':
+  version => '1.52.0',
+}
+```
+
+Same as above, but configured in Hiera:
+
+```puppet
+include victorialogs::vlogscli
+```
+
+```yaml
+victorialogs::vlogscli::version: "1.52.0"
+```
+
+Install from a package or use an externally managed binary:
+
+```puppet
+class { 'victorialogs::vlogscli':
+  install_method => 'package',
+  package_name   => 'vlogscli',
+  version        => '1.52.0',
+}
+
+class { 'victorialogs::vlogscli':
+  install_method => 'none',
+  binary_path    => '/usr/local/bin/vlogscli',
+}
+```
+
 ## Development
 
 ### Regenerating CLI Options Type
