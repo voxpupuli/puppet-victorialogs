@@ -45,42 +45,60 @@
 #   The user to run VictoriaLogs as.
 # @param group
 #   The group to run VictoriaLogs as.
+# @param working_directory
+#   The working directory for the VictoriaLogs service.
 # @param binary_path
 #   The path to the VictoriaLogs binary.
 # @param options
-#   A hash of VictoriaLogs CLI options. Keys are option names, values are
-#   option values.
+#   A hash of VictoriaLogs CLI options, grouped into arbitrarily named
+#   sections (e.g. `common`, `syslog-input-1`). Section values are hashes
+#   of option names to option values. All sections are merged and rendered
+#   as `-key=value` command-line arguments, so section names are only
+#   organizational and have no effect on the resulting service.
 define victorialogs::instance (
   Enum['absent', 'present'] $ensure = getvar('victorialogs::ensure').lest || { 'present' },
   Boolean $service_active = true,
   Variant[Boolean, Enum['mask']] $service_enable = true,
   String[1] $service_name = "victorialogs-${title}",
-  String[1] $user = $victorialogs::user,
-  String[1] $group = $victorialogs::group,
-  Stdlib::Absolutepath $binary_path = $victorialogs::install::binary_path,
+  Optional[String[1]] $user = getvar('victorialogs::user'),
+  Optional[String[1]] $group = getvar('victorialogs::group'),
+  Optional[Stdlib::Absolutepath] $working_directory = getvar('victorialogs::homedir'),
+  Optional[Stdlib::Absolutepath] $binary_path = getvar('victorialogs::install::binary_path'),
   Hash[String[1], Victorialogs::Options] $options = {},
 ) {
-  $real_service_active = $ensure ? {
-    'absent' => false,
-    default  => $service_active,
-  }
+  if $ensure == 'present' {
+    unless $user {
+      fail('$user is required when $ensure is "present"')
+    }
+    unless $group {
+      fail('$group is required when $ensure is "present"')
+    }
+    unless $binary_path {
+      fail('$binary_path is required when $ensure is "present"')
+    }
 
-  $real_service_enable = $ensure ? {
-    'absent' => false,
-    default  => $service_enable,
+    $real_service_active = $service_active
+    $real_service_enable = $service_enable
+    $real_content = epp('victorialogs/systemd.service.epp', {
+      description       => "VictoriaLogs ${name}",
+      instance_name     => $name,
+      service_name      => $service_name,
+      user              => $user,
+      group             => $group,
+      working_directory => $working_directory,
+      binary_path       => $binary_path,
+      args              => $options.values(),
+    })
+  } else {
+    $real_service_active = false
+    $real_service_enable = false
+    $real_content = undef
   }
 
   systemd::unit_file { "${service_name}.service":
     ensure  => $ensure,
     active  => $real_service_active,
     enable  => $real_service_enable,
-    content => epp('victorialogs/victorialogs.service.epp', {
-      instance_name => $name,
-      service_name  => $service_name,
-      user          => $user,
-      group         => $group,
-      binary_path   => $binary_path,
-      args          => $options.values(),
-    }),
+    content => $real_content,
   }
 }

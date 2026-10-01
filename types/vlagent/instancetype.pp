@@ -1,5 +1,5 @@
-# @summary VictoriaLogs instance type
-type Victorialogs::InstanceType = Struct[{
+# @summary VictoriaLogs vlagent instance type
+type Victorialogs::Vlagent::InstanceType = Struct[{
   Optional[ensure]            => Enum['absent', 'present'],
   Optional[service_active]    => Boolean,
   Optional[service_enable]    => Variant[Boolean, Enum['mask']],
@@ -8,5 +8,5 @@ type Victorialogs::InstanceType = Struct[{
   Optional[group]             => String[1],
   Optional[working_directory] => Stdlib::Absolutepath,
   Optional[binary_path]       => Stdlib::Absolutepath,
-  Optional[options]           => Hash[String[1], Victorialogs::Options],
+  Optional[options]           => Hash[String[1], Victorialogs::Vlagent::Options],
 }]

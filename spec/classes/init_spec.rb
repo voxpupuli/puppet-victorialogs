@@ -12,12 +12,9 @@ describe 'victorialogs' do
       end
 
       context 'with install_method=package' do
-        let(:params) { { install_method: 'package' } }
+        let(:params) { { install_method: 'package', binary_path: '/usr/bin/victoria-logs-prod' } }
 
-        it { is_expected.not_to contain_file('/opt/victorialogs-1.2.3-oss') }
-        it { is_expected.not_to contain_archive('/tmp/victorialogs-1.2.3-oss.tar.gz') }
-        it { is_expected.not_to contain_file('/opt/victorialogs-1.2.3-oss/victoria-logs-prod') }
-        it { is_expected.not_to contain_file('/usr/local/bin/victoria-logs-prod') }
+        it { is_expected.to have_victorialogs__install__archive_resource_count(0) }
         it { is_expected.to contain_package('victorialogs') }
         it { is_expected.to contain_victorialogs__instance('single').with_binary_path('/usr/bin/victoria-logs-prod') }
 
@@ -42,17 +39,9 @@ describe 'victorialogs' do
 
       # With install_method=none user should specify where the victorialogs binary is explicitly
       context 'with install_method=none' do
-        let(:params) do
-          {
-            install_method: 'none',
-            binary_path: '/opt/bin/victorialogs',
-          }
-        end
+        let(:params) { { install_method: 'none', binary_path: '/opt/bin/victorialogs' } }
 
-        it { is_expected.not_to contain_file('/opt/victorialogs-1.2.3-oss') }
-        it { is_expected.not_to contain_archive('/tmp/victorialogs-1.2.3-oss.tar.gz') }
-        it { is_expected.not_to contain_file('/opt/victorialogs-1.2.3-oss/victoria-logs-prod') }
-        it { is_expected.not_to contain_file('/usr/local/bin/victoria-logs-prod') }
+        it { is_expected.to have_victorialogs__install__archive_resource_count(0) }
         it { is_expected.not_to contain_package('victorialogs') }
         it { is_expected.to contain_victorialogs__instance('single').with_binary_path('/opt/bin/victorialogs') }
       end
@@ -62,49 +51,37 @@ describe 'victorialogs' do
 
         it { is_expected.to compile.with_all_deps }
 
-        it { is_expected.to contain_group('victorialogs').with_ensure('present') }
-
         it do
-          is_expected.to contain_user('victorialogs')
+          is_expected.to contain_victorialogs__install__os_user('victorialogs')
             .with_ensure('present')
-            .with_gid('victorialogs')
-            .with_shell('/usr/sbin/nologin')
-            .with_home('/var/lib/victorialogs')
-        end
-
-        it do
-          is_expected.to contain_file('/var/lib/victorialogs')
-            .with_ensure('directory')
-            .with_mode('0750')
-            .with_owner('victorialogs')
+            .with_manage_group(true)
             .with_group('victorialogs')
+            .with_manage_user(true)
+            .with_user('victorialogs')
+            .with_shell('/usr/sbin/nologin')
+            .with_homedir('/var/lib/victorialogs')
+            .with_manage_homedir(true)
+            .with_homedir_mode('0750')
+            .with_homedir_owner('victorialogs')
+            .with_homedir_group('victorialogs')
         end
 
-        it { is_expected.to contain_file('/opt/victorialogs-1.2.3-oss') }
-
         it do
-          is_expected.to contain_archive('/tmp/victorialogs-1.2.3-oss.tar.gz')
+          is_expected.to contain_victorialogs__install__archive('victorialogs-1.2.3-oss')
             .with_ensure('present')
-            .with_source(
+            .with_download_url(
               'https://github.com/VictoriaMetrics/VictoriaLogs/releases/download/v1.2.3/victoria-logs-linux-amd64-v1.2.3.tar.gz',
             )
             .with_checksum_url(
               'https://github.com/VictoriaMetrics/VictoriaLogs/releases/download/v1.2.3/victoria-logs-linux-amd64-v1.2.3_checksums.txt',
             )
-            .with_extract_path('/opt/victorialogs-1.2.3-oss')
-            .with_creates('/opt/victorialogs-1.2.3-oss/victoria-logs-prod')
-            .that_comes_before('File[/opt/victorialogs-1.2.3-oss/victoria-logs-prod]')
+            .with_checksum_verify(true)
+            .with_binary_path('/usr/local/bin/victoria-logs-prod')
+            .with_binary_name('victoria-logs-prod')
+            .with_tmp_dir('/tmp')
         end
 
-        it { is_expected.to contain_file('/opt/victorialogs-1.2.3-oss/victoria-logs-prod').with_ensure('file') }
-
-        it do
-          is_expected.to contain_file('/usr/local/bin/victoria-logs-prod')
-            .with_ensure('link')
-            .with_target('/opt/victorialogs-1.2.3-oss/victoria-logs-prod')
-        end
-
-        it { is_expected.not_to contain_package('victorialogs') }
+        it { is_expected.to have_package_resource_count(0) }
 
         it do
           is_expected.to contain_victorialogs__instance('single')
@@ -117,76 +94,75 @@ describe 'victorialogs' do
             .with_binary_path('/usr/local/bin/victoria-logs-prod')
             .with_options({ 'common' => { 'storageDataPath' => '/var/lib/victorialogs/victoria-logs-data' } })
             .that_subscribes_to('Class[Victorialogs::Install]')
-            .that_requires('File[/var/lib/victorialogs]')
-            .that_requires('User[victorialogs]')
-            .that_requires('Group[victorialogs]')
+            .that_requires('Victorialogs::Install::Os_user[victorialogs]')
         end
 
         context 'with edition=>enterprise' do
           let(:params) { super().merge(edition: 'enterprise') }
 
-          it { is_expected.to contain_file('/opt/victorialogs-1.2.3-enterprise') }
-          it { is_expected.to contain_file('/opt/victorialogs-1.2.3-enterprise/victoria-logs-prod') }
-
           it do
-            is_expected.to contain_archive('/tmp/victorialogs-1.2.3-enterprise.tar.gz')
-              .with_source(
+            is_expected.to contain_victorialogs__install__archive('victorialogs-1.2.3-enterprise')
+              .with_download_url(
                 'https://github.com/VictoriaMetrics/VictoriaLogs/releases/download/v1.2.3/victoria-logs-linux-amd64-v1.2.3-enterprise.tar.gz',
               )
               .with_checksum_url(
                 'https://github.com/VictoriaMetrics/VictoriaLogs/releases/download/v1.2.3/victoria-logs-linux-amd64-v1.2.3-enterprise_checksums.txt',
               )
-              .with_extract_path('/opt/victorialogs-1.2.3-enterprise')
-              .with_creates('/opt/victorialogs-1.2.3-enterprise/victoria-logs-prod')
-              .that_comes_before('File[/opt/victorialogs-1.2.3-enterprise/victoria-logs-prod]')
           end
         end
 
         context 'with manage_group=false' do
           let(:params) { super().merge(manage_group: false) }
 
-          it { is_expected.not_to contain_group('victorialogs') }
+          it { is_expected.to contain_victorialogs__install__os_user('victorialogs').with_manage_group(false) }
         end
 
         context 'with group set' do
           let(:params) { super().merge(group: 'foo') }
 
-          it { is_expected.to contain_group('foo') }
-          it { is_expected.to contain_file('/var/lib/victorialogs').with_group('foo') }
+          it { is_expected.to contain_victorialogs__install__os_user('victorialogs').with_group('foo').with_homedir_group('foo') }
           it { is_expected.to contain_victorialogs__instance('single').with_group('foo') }
         end
 
         context 'with manage_user=false' do
           let(:params) { super().merge(manage_user: false) }
 
-          it { is_expected.not_to contain_user('victorialogs') }
+          it do
+            is_expected.to contain_victorialogs__install__os_user('victorialogs')
+              .with_manage_user(false)
+              .with_manage_group(false)
+              .with_manage_homedir(false)
+          end
         end
 
         context 'with user set' do
           let(:params) { super().merge(user: 'foo') }
 
-          it { is_expected.to contain_user('foo') }
-          it { is_expected.to contain_file('/var/lib/victorialogs').with_owner('foo') }
+          it { is_expected.to contain_victorialogs__install__os_user('foo') }
           it { is_expected.to contain_victorialogs__instance('single').with_user('foo') }
         end
 
         context 'with user shell set' do
           let(:params) { super().merge(shell: '/bin/bash') }
 
-          it { is_expected.to contain_user('victorialogs').with_shell('/bin/bash') }
+          it { is_expected.to contain_victorialogs__install__os_user('victorialogs').with_shell('/bin/bash') }
         end
 
         context 'with user homedir set' do
           let(:params) { super().merge(homedir: '/srv/victorialogs') }
 
-          it { is_expected.to contain_user('victorialogs').with_home('/srv/victorialogs') }
-          it { is_expected.to contain_file('/srv/victorialogs') }
+          it { is_expected.to contain_victorialogs__install__os_user('victorialogs').with_homedir('/srv/victorialogs') }
         end
 
         context 'with user homedir attributes set' do
           let(:params) { super().merge(homedir_mode: '0751', homedir_owner: 'foo', homedir_group: 'bar') }
 
-          it { is_expected.to contain_file('/var/lib/victorialogs').with_mode('0751').with_owner('foo').with_group('bar') }
+          it do
+            is_expected.to contain_victorialogs__install__os_user('victorialogs')
+              .with_homedir_mode('0751')
+              .with_homedir_owner('foo')
+              .with_homedir_group('bar')
+          end
         end
 
         context 'with download & checksum URLs set' do
@@ -198,16 +174,26 @@ describe 'victorialogs' do
           end
 
           it do
-            is_expected.to contain_archive('/tmp/victorialogs-1.2.3-oss.tar.gz')
-              .with_source('https://example.tld/foo.tar.gz')
+            is_expected.to contain_victorialogs__install__archive('victorialogs-1.2.3-oss')
+              .with_download_url('https://example.tld/foo.tar.gz')
               .with_checksum_url('https://example.tld/foo-checksums.txt')
           end
+        end
+
+        context 'with checksum_verify=false' do
+          let(:params) { super().merge(checksum_verify: false) }
+
+          it { is_expected.to contain_victorialogs__install__archive('victorialogs-1.2.3-oss').with_checksum_verify(false) }
         end
 
         context 'with binary_path set' do
           let(:params) { super().merge(binary_path: '/opt/bin/victorialogs') }
 
-          it { is_expected.to contain_file('/opt/bin/victorialogs') }
+          it do
+            is_expected.to contain_victorialogs__install__archive('victorialogs-1.2.3-oss')
+              .with_binary_path('/opt/bin/victorialogs')
+          end
+
           it { is_expected.to contain_victorialogs__instance('single').with_binary_path('/opt/bin/victorialogs') }
         end
 
@@ -259,34 +245,20 @@ describe 'victorialogs' do
         context 'with ensure=>absent' do
           let(:params) { super().merge(ensure: 'absent') }
 
-          it { is_expected.to contain_group('victorialogs').with_ensure('absent') }
-          it { is_expected.to contain_user('victorialogs').with_ensure('absent') }
+          it { is_expected.to contain_victorialogs__install__os_user('victorialogs').with_ensure('absent') }
 
           it do
-            is_expected.to contain_file('/var/lib/victorialogs')
+            is_expected.to contain_victorialogs__install__archive('victorialogs-1.2.3-oss')
               .with_ensure('absent')
-              .with_recurse(true)
-              .with_force(true)
+              .with_binary_path('/usr/local/bin/victoria-logs-prod')
+              .with_binary_name('victoria-logs-prod')
           end
-
-          it do
-            is_expected.to contain_file('/opt/victorialogs-1.2.3-oss')
-              .with_ensure('absent')
-              .with_recurse(true)
-              .with_force(true)
-          end
-
-          it { is_expected.not_to contain_archive('/tmp/victorialogs-1.2.3-oss.tar.gz') }
-          it { is_expected.not_to contain_file('/opt/victorialogs-1.2.3-oss/victoria-logs-prod') }
-          it { is_expected.to contain_file('/usr/local/bin/victoria-logs-prod').with_ensure('absent') }
 
           it do
             is_expected.to contain_victorialogs__instance('single')
               .with_ensure('absent')
+              .that_comes_before('Victorialogs::Install::Os_user[victorialogs]')
               .that_comes_before('Class[Victorialogs::Install]')
-              .that_comes_before('File[/var/lib/victorialogs]')
-              .that_comes_before('User[victorialogs]')
-              .that_comes_before('Group[victorialogs]')
           end
         end
       end
