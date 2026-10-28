@@ -51,7 +51,7 @@ Main class to manage VictoriaLogs
 
 #### Examples
 
-##### 
+#####
 
 ```puppet
 # Run a single-node VictoriaLogs:
@@ -281,7 +281,7 @@ Manage vlagent
 
 #### Examples
 
-##### 
+#####
 
 ```puppet
 # Forward logs to a local VictoriaLogs:
@@ -511,7 +511,7 @@ Manage vlogscli tool
 
 #### Examples
 
-##### 
+#####
 
 ```puppet
 # Install vlogscli from archive:
@@ -637,7 +637,7 @@ every instance then.
 
 #### Examples
 
-##### 
+#####
 
 ```puppet
 Manage a single-node installation with 2 syslog inputs
@@ -768,7 +768,7 @@ every instance then.
 
 #### Examples
 
-##### 
+#####
 
 ```puppet
 # Forward logs collected to a local VictoriaLogs
@@ -984,4 +984,3 @@ Alias of `Enum['blockcache.missesBeforeCaching', 'datadog.ignoreFields', 'datado
 VictoriaLogs vlagent CLI options type
 
 Alias of `Hash[Victorialogs::Vlagent::Option, Data]`
-
