@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 Each new release typically also includes the latest modulesync defaults.
 These should not affect the functionality of the module.
 
+## [v1.1.0](https://github.com/voxpupuli/puppet-victorialogs/tree/v1.1.0) (2026-10-28)
+
+[Full Changelog](https://github.com/voxpupuli/puppet-victorialogs/compare/v1.0.0...v1.1.0)
+
+**Implemented enhancements:**
+
+- puppet/systemd: allow 11.x & puppetlabs/stdlib: Allow 10.x & puppet/archive: Allow 9.x [\#12](https://github.com/voxpupuli/puppet-victorialogs/pull/12) ([bastelfreak](https://github.com/bastelfreak))
+
 ## [v1.0.0](https://github.com/voxpupuli/puppet-victorialogs/tree/v1.0.0) (2026-10-05)
 
 [Full Changelog](https://github.com/voxpupuli/puppet-victorialogs/compare/12e9573fcd3dc3f74037b55561f25244e9b0cf33...v1.0.0)
